@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Script from 'next/script'
+import HomeLayout from "@/layout/HomeLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,7 +18,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="w-full min-h-[100vh]">
+        <div className="flex justify-center items-center flex-col w-full min-h-[100vh]">
+          {children}
+        </div>
+        <Script src="https://kit.fontawesome.com/8a3aa853ee.js" crossOrigin="anonymous"></Script>
+      </body>
     </html>
   );
 }
