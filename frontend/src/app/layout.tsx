@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import Script from 'next/script'
-import HomeLayout from "@/layout/HomeLayout";
 
-const inter = Inter({ subsets: ["latin"] });
+import React from "react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -22,7 +20,7 @@ export default function RootLayout({
         <div className="flex justify-center items-center flex-col w-full min-h-[100vh]">
           {children}
         </div>
-        <Script src="https://kit.fontawesome.com/8a3aa853ee.js" crossOrigin="anonymous"></Script>
+        <Script src="https://kit.fontawesome.com/8a3aa853ee.js" strategy="afterInteractive"></Script>
       </body>
     </html>
   );

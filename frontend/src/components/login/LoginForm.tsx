@@ -21,7 +21,7 @@ const LoginForm = () => {
   }
   return (
     <div className="flex justify-center items-center flex-col h-[100vh]">
-      <Image src="/img/login.png" alt="cute capybara" width="300" height="300" className="fixed bottom-0 right-20 z-10"></Image>
+      <Image src="/assets/img/login.png" alt="cute capybara" width="300" height="300" className="fixed bottom-0 right-20 z-10 h-auto" priority></Image>
       <div className={`container ${isSignIn ? `active` : ``}`}>
         <div className="form-container sign-up">
           <form>
@@ -55,7 +55,7 @@ const LoginForm = () => {
             />
             <div className="password">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value) }}
                 placeholder="Password"
@@ -104,12 +104,29 @@ const LoginForm = () => {
               value={email}
               onChange={(e) => { setEmail(e.target.value) }}
             />
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => { setPassword(e.target.value) }}
-              placeholder="Password"
-            />
+            <div className="password">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => { setPassword(e.target.value) }}
+                placeholder="Password"
+              />
+              {showPassword && password && 
+                <i 
+                  className="fa-solid fa-eye absolute top-[50%] translate-y-[-50%] right-3 text-[#807d7ddc]"
+                  onClick={() => {
+                    setShowPassword(false)
+                  }}
+                ></i>
+              }
+              {!showPassword && password && 
+              <i 
+                className="fa-solid fa-eye-slash absolute top-[50%] translate-y-[-50%] right-3 text-[#807d7ddc]"
+                onClick={() => {
+                  setShowPassword(true)
+                }}
+              ></i>}
+            </div>
             <a href="#" className="hover:text-black hover:underline">Forget Your Password?</a>
             <button onClick={(e) => handleSignIn(e)}>Sign In</button>
           </form>

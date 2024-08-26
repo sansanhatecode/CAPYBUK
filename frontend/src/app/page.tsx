@@ -1,9 +1,8 @@
-import HomeLayout from "@/layout/HomeLayout";
+import NavBar from "@/components/navbar/NavBar";
+import React from "react";
 
 export default function Home() {
   return (
-    <div className="w-full h-[50px] bg-black">
-      aaaaaa
-    </div>
+    <NavBar/>
   );
 }
