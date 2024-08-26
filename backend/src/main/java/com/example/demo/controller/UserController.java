@@ -46,13 +46,15 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(fetchUser);
     }
 
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUsers());
-    }
+//    @GetMapping("/users")
+//    public ResponseEntity<List<User>> getAllUsers() {
+//        return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUsers());
+//    }
 
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User requestUser) {
+        String hashPassword = this.passwordEncoder.encode(requestUser.getPassword());
+        requestUser.setPassword(hashPassword);
         User currentUser = userService.handleUpdateUser(requestUser);
         return ResponseEntity.status(HttpStatus.OK).body(currentUser);
     }

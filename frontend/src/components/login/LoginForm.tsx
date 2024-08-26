@@ -21,7 +21,7 @@ const LoginForm = () => {
   }
   return (
     <div className="flex justify-center items-center flex-col h-[100vh]">
-      <Image src="/img/login.png" alt="cute capybara" width="300" height="300" className="fixed bottom-0 right-20 z-10"></Image>
+      <Image src="/assets/img/login.png" alt="cute capybara" width="300" height="300" className="fixed bottom-0 right-20 z-10 h-auto" priority></Image>
       <div className={`container ${isSignIn ? `active` : ``}`}>
         <div className="form-container sign-up">
           <form>

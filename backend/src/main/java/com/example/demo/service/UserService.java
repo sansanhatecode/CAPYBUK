@@ -32,9 +32,9 @@ public class UserService {
         return null;
     }
 
-    public List<User> getAllUsers() {
-        return this.userRepository.findAll();
-    }
+//    public List<User> getAllUsers() {
+//        return this.userRepository.findAll();
+//    }
 
     public User handleUpdateUser(User requestUser) {
         User currentUser = this.getUserById(requestUser.getId());
