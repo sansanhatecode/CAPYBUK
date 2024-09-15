@@ -1,4 +1,4 @@
-export const saveAuthToken = (authToken: string) => {
+export const setAuthToken = (authToken: string) => {
   return localStorage.setItem('authToken', authToken);
 };
 
