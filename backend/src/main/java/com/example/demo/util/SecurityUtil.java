@@ -1,88 +1,182 @@
 package com.example.demo.util;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import com.example.demo.dto.ResLoginDTO;
+import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SecurityUtil {
 
     private final JwtEncoder jwtEncoder;
-    private final JwtDecoder jwtDecoder;
 
-
-    public SecurityUtil(JwtEncoder jwtEncoder, @Qualifier("jwtDecoder") JwtDecoder jwtDecoder) {
+    public SecurityUtil(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
-        this.jwtDecoder = jwtDecoder;
     }
 
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
 
-    @Value("${capybuk.jwt.token-validity-in-seconds}")
-    private long jwtExpiration;
+    @Value("${capybuk.jwt.base64-secret}")
+    private String jwtKey;
+
+    @Value("${capybuk.jwt.access-token-validity-in-seconds}")
+    private long accessTokenExpiration;
 
     @Value("${capybuk.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
-    public String createToken(Authentication authentication) {
+    public String createAccessToken(String username, ResLoginDTO.UserLogin dto) {
         Instant now = Instant.now();
-        Instant validity = now.plus(this.jwtExpiration, ChronoUnit.SECONDS);
+        Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
+
+        // hardcode permission (for testing)
+        List<String> listAuthority = new ArrayList<String>();
+
+        listAuthority.add("ROLE_USER_CREATE");
+        listAuthority.add("ROLE_USER_UPDATE");
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(authentication.getName())
-                .claim("hoidanit", authentication)
+                .subject(username)
+                .claim("user", dto)
+                .claim("permission", listAuthority)
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader,claims)).getTokenValue();
     }
 
-    public String createRefreshToken(Authentication authentication) {
+    public String createRefreshToken(String email, ResLoginDTO dto) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.refreshTokenExpiration, ChronoUnit.SECONDS);
 
+        // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(authentication.getName())
-                .claim("hoidanit", authentication)
+                .subject(email)
+                .claim("user", dto.getUser())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+
     }
 
-    public Authentication authenticateWithRefreshToken(String refreshToken, String accessToken) {
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length,
+                JWT_ALGORITHM.getName());
+    }
+
+    public Jwt checkValidRefreshToken(String token) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+                getSecretKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
         try {
-            // Decode the access token to check its expiration
-            Jwt jwtAccessToken = jwtDecoder.decode(accessToken);
-            Instant now = Instant.now();
-
-            // Check if the access token is expired
-            if (jwtAccessToken.getExpiresAt().isAfter(now)) {
-                throw new RuntimeException("Access token is still valid. No need for refresh.");
-            }
-
-            // Decode the refresh token to authenticate
-            Jwt jwtRefreshToken = jwtDecoder.decode(refreshToken);
-
-            // Xác thực refresh token và trả về đối tượng Authentication
-            return new UsernamePasswordAuthenticationToken(jwtRefreshToken.getSubject(), null, List.of());
-
-        } catch (JwtException e) {
-            // Handle invalid or expired refresh token
-            throw new RuntimeException("Invalid or expired refresh token");
+            return jwtDecoder.decode(token);
+        } catch (Exception e) {
+            System.out.println(">>> Refresh Token error: " + e.getMessage());
+            throw e;
         }
     }
+
+    /**
+     * Get the login of the current user.
+     *
+     * @return the login of the current user.
+     */
+    public static Optional<String> getCurrentUserLogin() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
+    }
+
+    private static String extractPrincipal(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        } else if (authentication.getPrincipal() instanceof UserDetails springSecurityUser) {
+            return springSecurityUser.getUsername();
+        } else if (authentication.getPrincipal() instanceof Jwt jwt) {
+            return jwt.getSubject();
+        } else if (authentication.getPrincipal() instanceof String s) {
+            return s;
+        }
+        return null;
+    }
+
+    /**
+     * Get the JWT of the current user.
+     *
+     * @return the JWT of the current user.
+     */
+    public static Optional<String> getCurrentUserJWT() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        return Optional.ofNullable(securityContext.getAuthentication())
+                .filter(authentication -> authentication.getCredentials() instanceof String)
+                .map(authentication -> (String) authentication.getCredentials());
+    }
+
+    /**
+     * Check if a user is authenticated.
+     *
+     * @return true if the user is authenticated, false otherwise.
+     */
+    // public static boolean isAuthenticated() {
+    //     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    //     return authentication != null && getAuthorities(authentication).noneMatch(AuthoritiesConstants.ANONYMOUS::equals);
+    // }
+
+    /**
+     * Checks if the current user has any of the authorities.
+     *
+     * @param authorities the authorities to check.
+     * @return true if the current user has any of the authorities, false otherwise.
+     */
+    // public static boolean hasCurrentUserAnyOfAuthorities(String... authorities) {
+    //     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    //     return (
+    //         authentication != null && getAuthorities(authentication).anyMatch(authority -> Arrays.asList(authorities).contains(authority))
+    //     );
+    // }
+
+    /**
+     * Checks if the current user has none of the authorities.
+     *
+     * @param authorities the authorities to check.
+     * @return true if the current user has none of the authorities, false otherwise.
+     */
+    // public static boolean hasCurrentUserNoneOfAuthorities(String... authorities) {
+    //     return !hasCurrentUserAnyOfAuthorities(authorities);
+    // }
+
+    /**
+     * Checks if the current user has a specific authority.
+     *
+     * @param authority the authority to check.
+     * @return true if the current user has the authority, false otherwise.
+     */
+    // public static boolean hasCurrentUserThisAuthority(String authority) {
+    //     return hasCurrentUserAnyOfAuthorities(authority);
+    // }
+
+    // private static Stream<String> getAuthorities(Authentication authentication) {
+    //     return authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority);
+    // }
+
+
 }

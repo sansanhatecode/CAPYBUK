@@ -1,11 +1,19 @@
 package com.example.demo.dto;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
 public class ResLoginDTO {
-
     private String accessToken;
+    private UserLogin user;
 
-    private String refreshToken;
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserLogin {
+        private String id;
+        private String email;
+        private String name;
+    }
 }

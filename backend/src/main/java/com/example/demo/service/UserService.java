@@ -32,9 +32,9 @@ public class UserService {
         return null;
     }
 
-//    public List<User> getAllUsers() {
-//        return this.userRepository.findAll();
-//    }
+    public List<User> getAllUsers() {
+        return this.userRepository.findAll();
+    }
 
     public User handleUpdateUser(User requestUser) {
         User currentUser = this.getUserById(requestUser.getId());
@@ -51,4 +51,17 @@ public class UserService {
     public User handleGetUserByUsername(String username) {
         return this.userRepository.findByUsername(username);
     }
+
+    public void updateUserToken(String token, String username) {
+        User currentUser = this.handleGetUserByUsername(username);
+        if (currentUser != null) {
+            currentUser.setRefreshToken(token);
+            this.userRepository.save(currentUser);
+        }
+    }
+
+    public User getUserByRefreshTokenAndUsername(String token, String username) {
+        return this.userRepository.findByRefreshTokenAndUsername(token, username);
+    }
+
 }

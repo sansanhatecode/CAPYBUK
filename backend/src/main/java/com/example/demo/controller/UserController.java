@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequestMapping("/api/v1")
 public class UserController {
 
     private final UserService userService;
@@ -46,10 +47,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(fetchUser);
     }
 
-//    @GetMapping("/users")
-//    public ResponseEntity<List<User>> getAllUsers() {
-//        return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUsers());
-//    }
+    @GetMapping("/users")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUsers());
+    }
 
     @PutMapping("/users")
     public ResponseEntity<User> updateUser(@RequestBody User requestUser) {
