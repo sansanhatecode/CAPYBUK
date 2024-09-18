@@ -16,12 +16,8 @@ public class BeforeSaveListener extends AbstractMongoEventListener<User> {
         User user = event.getSource();
         if (user.getCreatedAt() == null) {
             user.setCreatedAt(Instant.now());
-            String name = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-            user.setCreatedBy(name);
         } else {
             user.setUpdatedAt(Instant.now());
-            String name = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
-            user.setUpdatedBy(name);
         }
 
     }

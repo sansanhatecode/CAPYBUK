@@ -1,21 +1,25 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ReqLoginDTO;
-import com.example.demo.dto.ResLoginDTO;
+import com.example.demo.dto.request.ReqLoginDTO;
+import com.example.demo.dto.request.ReqRegisterDTO;
+import com.example.demo.dto.response.ResLoginDTO;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
 import com.example.demo.util.SecurityUtil;
 import com.example.demo.util.annotation.ApiMessage;
+import com.example.demo.util.error.EmailAreadyExistException;
 import com.example.demo.util.error.IdInvalidException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,16 +33,36 @@ public class AuthController {
 
     private final UserService userService;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Value("${capybuk.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
-    public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder, SecurityUtil securityUtil, UserService userService) {
+    public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder,
+                          SecurityUtil securityUtil, UserService userService, PasswordEncoder passwordEncoder) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.securityUtil = securityUtil;
         this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostMapping("/auth/register")
+    @ApiMessage("Register success")
+    public ResponseEntity<Void> register(@Valid @RequestBody ReqRegisterDTO reqRegister) throws EmailAreadyExistException {
+        if (this.userService.handleExistByUsername(reqRegister.getUsername())) {
+            throw new EmailAreadyExistException("Email already exist. Please try another email.");
+        }
+        User newUser = new User();
+        newUser.setUsername(reqRegister.getUsername());
+        String hashPassword = this.passwordEncoder.encode(reqRegister.getPassword());
+        newUser.setPassword(hashPassword);
+        newUser.setDisplayName(reqRegister.getDisplayName());
+        this.userService.handleCreateUser(newUser);
+        return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
     @PostMapping("/auth/login")
+    @ApiMessage("Login success")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) {
         // Nạp input gồm username/password vào Security
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
@@ -49,6 +73,7 @@ public class AuthController {
 
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
         ResLoginDTO res = new ResLoginDTO();
         User currentUserDB = this.userService.handleGetUserByUsername(loginDto.getUsername());
@@ -159,9 +184,9 @@ public class AuthController {
     @PostMapping("/auth/logout")
     @ApiMessage("Logout User")
     public ResponseEntity<Void> logout() throws IdInvalidException {
-        String username = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if (username.equals("")) {
+        if (username.isEmpty()) {
             throw new IdInvalidException("Access Token is invalid");
         }
 
@@ -175,6 +200,10 @@ public class AuthController {
                 .path("/")
                 .maxAge(0)
                 .build();
+
+        // clear user information in login session
+        SecurityContextHolder.getContext().setAuthentication(null);
+        SecurityContextHolder.clearContext();
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString())
