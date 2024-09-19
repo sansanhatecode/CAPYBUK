@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,37 +21,19 @@ public class GlobalException {
     @ExceptionHandler(value = {
             IdInvalidException.class,
             UsernameNotFoundException.class,
-            BadCredentialsException.class
+            BadCredentialsException.class,
+            EmailAreadyExistException.class,
+            UserNotFoundException.class,
+            UserNotLoggedInException.class
     })
-//    public ResponseEntity<RestResponse<Object>> handleIdException(IdInvalidException idException) {
-//        RestResponse<Object> res = new RestResponse<>();
-//        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-//        res.setError(idException.getMessage());
-//        res.setMessage("Exception occurs...");
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
-//    }
-    public ResponseEntity<RestResponse<Object>> handleException(Exception ex) {
+    public ResponseEntity<RestResponse<Object>> handleIdException(Exception exception) {
         RestResponse<Object> res = new RestResponse<>();
-        HttpStatus status;
-
-        if (ex instanceof IdInvalidException) {
-            status = HttpStatus.BAD_REQUEST;
-            res.setError(ex.getMessage());
-        } else if (ex instanceof UsernameNotFoundException) {
-            status = HttpStatus.NOT_FOUND;
-            res.setError(ex.getMessage());
-        } else if (ex instanceof BadCredentialsException) {
-            status = HttpStatus.UNAUTHORIZED;
-            res.setError(ex.getMessage());
-        } else {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            res.setError("Unexpected error");
-        }
-
-        res.setStatusCode(status.value());
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        res.setError(exception.getMessage());
         res.setMessage("Exception occurs...");
-        return ResponseEntity.status(status).body(res);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RestResponse<Object>> validationError(MethodArgumentNotValidException ex) {
@@ -65,5 +48,14 @@ public class GlobalException {
         res.setMessage(errors.size() > 1 ? errors : errors.get(0));
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<RestResponse<Object>> urlNotFound(NoResourceFoundException ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.NOT_FOUND.value());
+        res.setError(ex.getMessage());
+        res.setMessage("Exception occurs...");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
 }

@@ -1,39 +1,32 @@
-package com.example.demo.model;
+package com.example.demo.dto.response;
 
 import com.example.demo.util.constant.GenderEnum;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 import java.util.List;
 
-@Document(value = "user")
 @Getter
 @Setter
-public class User {
-
-    @Id
+@NoArgsConstructor
+@AllArgsConstructor
+public class ResUpdateUserDTO {
     private String id;
-
     private String username;
-    private String password;
-
     private String displayName;
     private GenderEnum gender;
-    private String birthday;
     private String avatar;
-    private String refreshToken;
     private String background;
     private int friendsCount;
     private int followersCount;
+    private int postsCount;
+    private String language;
     private String address;
     private List<String> friendIds;
     private List<String> followerIds;
     private List<String> postIds;
-    private Instant createdAt;
     private Instant updatedAt;
 }
-
-
