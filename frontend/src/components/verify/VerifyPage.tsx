@@ -1,5 +1,5 @@
 "use client";
-import React, { LegacyRef, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Confetti from "react-confetti";
 import { useAuthorization } from "@/hooks/queries/useAuthorization";
@@ -30,7 +30,7 @@ const VerifyPage: React.FC = () => {
       setTimeout(() => {
         setShowConfetti(false);
       }, 1000);
-    }, 2000);
+    }, 3000);
 
     return () => {
       clearTimeout(timer);
@@ -63,6 +63,7 @@ const VerifyPage: React.FC = () => {
   const handleVerify = async () => {
     try {
       const data = await verify(code);
+      console.log(data);
       router.push("/");
     } catch (e) {
       console.error
@@ -105,6 +106,7 @@ const VerifyPage: React.FC = () => {
             <input
               key={index}
               type="text"
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               ref={(el) => (inputRefs.current[index] = el as any)}
               onInput={(event) => handleChange(index, event)}
               className="w-10 h-12 border border-gray-300 rounded-lg text-center text-2xl focus:outline-none focus:ring-2 focus:ring-blue-400 transition"

@@ -1,6 +1,6 @@
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import Avatar from "../common/Avatar";
 
 const LeftSidebar = () => {
   return (
@@ -10,21 +10,12 @@ const LeftSidebar = () => {
         className="flex items-center gap-2 w-full min-h-12 mt-20 hover:bg-brown-opacity rounded-md"
       >
         <div className="w-[55px] h-[55px] flex items-center justify-center">
-          <div className="w-11 h-11 rounded-full overflow-hidden border-brown-opacity border-2">
-            <Image
-              src="/assets/img/example-avatar.jpg"
-              alt="capybuk logo"
-              width="55"
-              height="55"
-              priority
-              className="object-cover"
-            ></Image>
-          </div>
+          <Avatar/>
         </div>
         <p className="font-bold">Kiều Linh</p>
       </Link>
       <Link
-        href={"/hehe"}
+        href={"/hehe/friends"}
         className="flex items-center gap-2 w-full min-h-12 hover:bg-brown-opacity rounded-md"
       >
         <div className="w-[55px] h-[55px] flex items-center justify-center">

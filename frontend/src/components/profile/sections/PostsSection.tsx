@@ -11,7 +11,7 @@ const PostsSection = () => {
   return (
     <section className=" min-h-10 mt-4 w-[65%] rounded-t-md m-auto flex gap-3 mb-4">
       <div className="w-[40%] flex flex-col gap-3">
-        <div className="p-3 bg-brown-xlight rounded-md flex flex-col gap-3">
+        <div className="p-3 bg-brown-xlight rounded-md flex flex-col gap-3 shadow-md">
           <h2 className="text-2xl font-bold">Giới thiệu</h2>
           <p>Đây là phần tiểu sử</p>
           <button className="font-bold w-full text-gray-800 bg-brown-light hover:shadow-md rounded-md py-1">
@@ -27,7 +27,7 @@ const PostsSection = () => {
             Chỉnh sửa chi tiết
           </button>
         </div>
-        <div className="p-3 bg-brown-xlight rounded-md">
+        <div className="p-3 bg-brown-xlight rounded-md shadow-md">
           <h2
             className="text-2xl font-bold hover:underline"
             onClick={() => router.push(`/${userId}/photos`)}
@@ -35,7 +35,7 @@ const PostsSection = () => {
             Ảnh
           </h2>
         </div>
-        <div className="p-3 bg-brown-xlight rounded-md">
+        <div className="p-3 bg-brown-xlight rounded-md shadow-md">
           <h2
             className="text-2xl font-bold hover:underline"
             onClick={() => router.push(`/${userId}/friends`)}

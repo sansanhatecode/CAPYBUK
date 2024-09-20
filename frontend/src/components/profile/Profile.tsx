@@ -56,7 +56,7 @@ const Profile = () => {
                   key={index}
                   className="w-8 h-8 rounded-full overflow-hidden border-brown-xlight border-[1px] relative cursor-pointer"
                   style={{ zIndex: friends.length - index }}
-                  onClick={() => console.log("hehe")}
+                  onClick={() => router.push(`/${userId}/friends`)}
                 >
                   <img
                     src="/assets/img/example-avatar.jpg"

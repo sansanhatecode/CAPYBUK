@@ -6,7 +6,7 @@ interface MainSectionProps {
 
 const MainSection: React.FC<MainSectionProps> = ({ children }) => {
   return (
-    <div className='z-10 min-h-[100vh] w-[50%] bg-[#ffffffc9] min-w-[320px]'>
+    <div className='z-10 w-[45%] min-w-[320px] flex flex-col gap-3 mt-[55px] pt-3 max-w-[750px]'>
       {children}
     </div>
   );

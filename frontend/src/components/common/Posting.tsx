@@ -3,7 +3,7 @@ import Avatar from "./Avatar";
 
 const Posting = () => {
   return (
-    <div className="bg-brown-xlight rounded-md w-full p-3">
+    <div className="bg-brown-xlight rounded-md w-full p-3 shadow-md">
       <div className="w-full flex justify-between items-center pb-3 border-b-[1px] border-brown-light">
         <Avatar />
         <input
