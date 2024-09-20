@@ -7,9 +7,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex justify-center items-center flex-col w-full min-h-[100vh]">
-      <NavBar/>
-      {children}
-    </div>
+    <>
+      <NavBar />
+      <main className="flex items-center flex-col w-full min-h-[100vh]">
+        {children}
+      </main>
+    </>
   );
 }

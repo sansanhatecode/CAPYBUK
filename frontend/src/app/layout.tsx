@@ -17,9 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="w-full min-h-[100vh]">
-        <div className="flex justify-center items-center flex-col w-full min-h-[100vh]">
-          {children}
-        </div>
+        {children}
         <Script src="https://kit.fontawesome.com/8a3aa853ee.js" strategy="afterInteractive"></Script>
       </body>
     </html>

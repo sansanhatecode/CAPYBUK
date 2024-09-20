@@ -1,0 +1,3 @@
+.profile-button {
+  @apply px-4 py-4 font-semibold  hover:text-gray-800;
+}

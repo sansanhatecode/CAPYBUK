@@ -1,8 +1,5 @@
-import { getAuthToken, setAuthToken } from "@/helper/storage";
-import { LoginRequest, LoginResponseData } from "@/types/auth";
+import { getAuthToken } from "@/helper/storage";
 import axios, { AxiosResponse } from "axios";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
 
 export type HeaderResponse = {
   code: string | null;
@@ -19,20 +16,12 @@ type Response<T> = {
 };
 
 export type Params = {
-  [KEY in string]: any;
+  [KEY in string]: unknown;
 };
 
 axios.defaults.baseURL = process.env.BASE_URL;
 
 export function useRequest() {
-  const router = useRouter();
-
-  useEffect(() => {
-    const token = getAuthToken();
-    if (!token) {
-      router.push("/login");
-    }
-  }, [router]);
   
   axios.interceptors.request.use(
     (config) => {
@@ -150,30 +139,6 @@ export function useRequest() {
             reject(e.response.data);
           });
       });
-    }
-  }
-
-  class Authorization {
-    static signUp(data: Params): Promise<boolean> | null {
-      return null;
-    }
-
-    static async signIn(data: LoginRequest): Promise<Response<LoginResponseData>>{
-      try {
-        const response = await axios.post("/signin", data);
-        const { accessToken } = response.data; // Assuming the response contains the accessToken
-
-        // Store the accessToken in local storage
-        setAuthToken(accessToken);
-
-        return response.data; // Return the response or any relevant data
-      } catch (error) {
-        throw new Error("Sign-in failed. Please try again."); 
-      }
-    }
-
-    static signOut(): Promise<any> | null{
-      return null;
     }
   }
 

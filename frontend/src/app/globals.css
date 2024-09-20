@@ -16,6 +16,16 @@ body {
   background: linear-gradient(to right, #d1c5c5, #f1eae0);
 }
 
-.heading-1 {
+p {
+  font-size: 15px;
+  color: #333333;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+  color: #333333;
+}
+
+.heading-1, h1 {
   @apply font-bold text-3xl;
 }
+
