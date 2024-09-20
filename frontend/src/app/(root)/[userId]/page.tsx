@@ -1,8 +1,9 @@
+import PostsSection from '@/components/profile/sections/PostsSection'
 import React from 'react'
 
 const page = () => {
   return (
-    <div>page</div>
+    <PostsSection/>
   )
 }
 

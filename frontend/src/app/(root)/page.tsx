@@ -1,13 +1,13 @@
 import MainSection from "@/components/common/MainSection";
-import LeftNavbar from "@/components/navbar/LeftNavbar";
-import RightNavbar from "@/components/navbar/RightNavbar";
+import LeftSidebar from "@/components/navbar/LeftSidebar";
+import RightSidebar from "@/components/navbar/RightSidebar";
 import React from "react";
 
 export default function Home() {
   return (
     <>
-      <LeftNavbar/>
-      <RightNavbar/>
+      <LeftSidebar/>
+      <RightSidebar/>
       <MainSection></MainSection>
     </>
   );
