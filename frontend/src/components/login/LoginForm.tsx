@@ -2,23 +2,47 @@
 import React, { useState } from "react";
 import "./loginForm.css";
 import Image from "next/image";
+import { useAuthorization } from "@/hooks/queries/useAuthorization";
+import { REGEX } from "@/constants/common";
+import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
 
 const LoginForm = () => {
   const [isSignIn, setIsSignIn] = useState<boolean>(false);
   const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
+  const [emailError, setEmailError] = useState<boolean>(false);
+  const [loginError, setLoginError] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
+  const { signIn } = useAuthorization();
+  const router = useRouter();
+
   const handleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    await console.log(email, password);
+    e.preventDefault()
+    setEmailError(!REGEX.EMAIL.test(email))
+    if (!loginError && !emailError) {
+      try {
+        const data = await signIn({ username: email, password: password });
+        setLoginError("");
+        router.push("/");
+      } catch (error) {
+        if (error instanceof AxiosError) {
+          setLoginError(error.message);
+        } else {
+          setLoginError("Invalid email or password");
+        }
+      }
+    }
   };
 
   const handleSignUp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     await console.log(name, email, password);
   };
+
   return (
     <div className="flex justify-center items-center flex-col h-[100vh]">
       <Image
@@ -47,7 +71,9 @@ const LoginForm = () => {
                 <i className="fa-brands fa-linkedin-in"></i>
               </a>
             </div>
-            <span className="font-bold">or use your email for registeration</span>
+            <span className="font-bold">
+              or use your email for registeration
+            </span>
             <input
               type="text"
               value={name}
@@ -61,9 +87,15 @@ const LoginForm = () => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                setEmailError(!REGEX.EMAIL.test(email));
               }}
               placeholder="Email"
             />
+            {emailError ? (
+              <p className="error">* Invalid email format</p>
+            ) : (
+              <></>
+            )}
             <div className="password">
               <input
                 type={showPassword ? "text" : "password"}
@@ -118,8 +150,14 @@ const LoginForm = () => {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                setEmailError(!REGEX.EMAIL.test(email));
               }}
             />
+            {emailError ? (
+              <p className="error">* Invalid email format</p>
+            ) : (
+              <></>
+            )}
             <div className="password">
               <input
                 type={showPassword ? "text" : "password"}
@@ -146,7 +184,11 @@ const LoginForm = () => {
                 ></i>
               )}
             </div>
-            <a href="/forget-password" className="hover:text-black hover:underline italic">
+            {loginError ? <p className="error">* {loginError}</p> : <></>}
+            <a
+              href="/forget-password"
+              className="hover:text-black hover:underline italic"
+            >
               Forget Your Password?
             </a>
             <button onClick={(e) => handleSignIn(e)}>Sign In</button>
@@ -166,6 +208,7 @@ const LoginForm = () => {
                   setName("");
                   setEmail("");
                   setPassword("");
+                  setEmailError(false);
                 }}
               >
                 Sign In
@@ -183,6 +226,7 @@ const LoginForm = () => {
                   setName("");
                   setEmail("");
                   setPassword("");
+                  setEmailError(false);
                 }}
               >
                 Sign Up

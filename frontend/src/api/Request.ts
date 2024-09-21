@@ -19,7 +19,7 @@ export type Params = {
   [KEY in string]: unknown;
 };
 
-axios.defaults.baseURL = process.env.BASE_URL;
+axios.defaults.baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
 export function useRequest() {
   

@@ -26,7 +26,7 @@ const NavBar = () => {
     <nav className="w-full bg-[#C5A27C] fixed z-20 top-0 flex justify-between min-h-[55px] items-center px-4">
       <div className="flex justify-start items-center gap-3 w-[20%]">
         <Image
-          src="/assets/img/capubuk-logo.png"
+          src="/assets/img/capybuk-logo.png"
           alt="capybuk logo"
           width="55"
           height="55"
