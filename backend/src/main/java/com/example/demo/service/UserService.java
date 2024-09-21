@@ -9,11 +9,15 @@ import com.example.demo.util.helper.RandomStringGenerator;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
@@ -147,24 +151,27 @@ public class UserService {
         String toAddress = user.getUsername();
         String subject = "Welcome to Capybuk! Please verify your email";
         String content = "<html>"
-                + "<body style='font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;'>"
+                + "<body style='font-family: Arial, sans-serif; background-color: #f1eae0b9; padding: 20px;'>"
                 + "<div style='max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 10px;'>"
-                + "<h1 style='text-align: center; color: #7289da;'>Welcome to Capybuk!</h1>"
+                + "<h1 style='text-align: center; color: #AD7D59;'>Welcome to Capybuk!</h1>"
                 + "<p>Hi [[name]],</p>"
                 + "<p>Wowwee! Thanks for registering an account with Capybuk. You're the coolest person around (and we can't wait for you to get started).</p>"
-                + "<p>Before you get started, we'll need to verify your email. Please click the button below to verify your email address:</p>"
+                + "<p>Before you get started, we'll need to verify your email. Please copy the code below to verify your email address:</p>"
                 + "<div style='text-align: center; margin: 20px 0;'>"
-                + "<a href=\"[[URL]]\" style='display: inline-block; padding: 10px 20px; background-color: #7289da; color: #fff; text-decoration: none; font-size: 16px; border-radius: 5px;'>Verify Email</a>"
+                + "<p style='font-weight: bold; font-size: 20px;'>[[code]]</p>"
                 + "</div>"
                 + "<p>The email verification link will expire after 5 minutes.</p>"
                 + "<p>If you did not register an account with Capybuk, please ignore this email.</p>"
                 + "<p>Thank you,<br>The Capybuk Team</p>"
+                + "<div style='text-align: right;'>"
+                + "<img src='cid:image_logo' alt='Capybara with Camera' style='width: 100px; height: auto;'>"
+                + "</div>"
                 + "</div>"
                 + "</body>"
                 + "</html>";
 
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
         helper.setFrom(fromAddress);
         helper.setTo(toAddress);
@@ -172,10 +179,18 @@ public class UserService {
 
         // Customize the content with the user's display name and verification URL
         content = content.replace("[[name]]", user.getDisplayName());
-        String verifyURL = "http://localhost:8081/api/v1/auth/verify?code=" + user.getVerificationCode();
-        content = content.replace("[[URL]]", verifyURL);
+        content = content.replace("[[code]]", user.getVerificationCode());
 
         helper.setText(content, true);
+
+        try {
+            Resource res = new FileSystemResource(new File("E:\\image\\capybara.png"));
+            helper.addInline("image_logo", res);
+        } catch (Exception e) {
+            e.printStackTrace(); // In ra thông báo lỗi
+        }
+
+
         mailSender.send(message);
 
     }
