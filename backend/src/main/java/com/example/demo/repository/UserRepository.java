@@ -12,4 +12,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     User findByRefreshTokenAndUsername(String token, String username);
 
     boolean existsByUsername(String username);
+
+    User findByVerificationCode(String verificationCode);
 }
