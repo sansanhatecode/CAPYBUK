@@ -45,12 +45,6 @@ public class UserDetailsCustom implements UserDetailsService {
                 this.userService.sendVerificationEmail(user);
                 throw new EmailNotVerifyException("Account has not been verified. Please check email for new verification code.");
             }
-
-            // Kiểm tra mã xác thực nếu tài khoản chưa được kích hoạt
-            if (!user.getVerificationCode().equals(user.getVerificationCode()) ||
-                    user.getVerificationDateExpired().isBefore(Instant.now())) {
-                throw new EmailNotVerifyException("Verify code is invalid.");
-            }
         } catch (MessagingException e) {
             // Xử lý lỗi gửi email
             throw new RuntimeException("Error when sending email verification", e);
