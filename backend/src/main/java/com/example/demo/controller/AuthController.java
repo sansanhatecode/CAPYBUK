@@ -4,11 +4,14 @@ import com.example.demo.dto.request.ReqLoginDTO;
 import com.example.demo.dto.request.ReqRegisterDTO;
 import com.example.demo.dto.response.ResLoginDTO;
 import com.example.demo.model.User;
+import com.example.demo.service.EmailValidatorService;
 import com.example.demo.service.UserService;
 import com.example.demo.util.SecurityUtil;
 import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.EmailAreadyExistException;
+import com.example.demo.util.error.EmailNotVerifyException;
 import com.example.demo.util.error.IdInvalidException;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -19,7 +22,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,37 +35,48 @@ public class AuthController {
 
     private final UserService userService;
 
-    private final PasswordEncoder passwordEncoder;
+    private final EmailValidatorService emailValidatorService;
 
     @Value("${capybuk.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
     public AuthController(AuthenticationManagerBuilder authenticationManagerBuilder,
-                          SecurityUtil securityUtil, UserService userService, PasswordEncoder passwordEncoder) {
+                          SecurityUtil securityUtil, UserService userService,
+                          EmailValidatorService emailValidatorService) {
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.securityUtil = securityUtil;
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+        this.emailValidatorService = emailValidatorService;
     }
 
     @PostMapping("/auth/register")
     @ApiMessage("Register success")
-    public ResponseEntity<Void> register(@Valid @RequestBody ReqRegisterDTO reqRegister) throws EmailAreadyExistException {
+    public ResponseEntity<Void> register(@Valid @RequestBody ReqRegisterDTO reqRegister) throws EmailAreadyExistException, MessagingException, IdInvalidException {
+        if (!this.emailValidatorService.test(reqRegister.getUsername())) {
+            throw new IdInvalidException("Email is invalid");
+        }
+
         if (this.userService.handleExistByUsername(reqRegister.getUsername())) {
             throw new EmailAreadyExistException("Email already exist. Please try another email.");
         }
-        User newUser = new User();
-        newUser.setUsername(reqRegister.getUsername());
-        String hashPassword = this.passwordEncoder.encode(reqRegister.getPassword());
-        newUser.setPassword(hashPassword);
-        newUser.setDisplayName(reqRegister.getDisplayName());
-        this.userService.handleCreateUser(newUser);
+
+        this.userService.register(reqRegister);
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
+    }
+
+    @GetMapping("/auth/verify")
+    public ResponseEntity<String> verifyAccount(@RequestParam("code") String code) {
+        boolean isVerified = userService.verifyUserByCode(code);
+        if (isVerified) {
+            return ResponseEntity.ok("Your account has been verified successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification code.");
+        }
     }
 
     @PostMapping("/auth/login")
     @ApiMessage("Login success")
-    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) {
+    public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) throws EmailNotVerifyException {
         // Nạp input gồm username/password vào Security
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 loginDto.getUsername(), loginDto.getPassword());
@@ -71,12 +84,10 @@ public class AuthController {
         // xác thực người dùng => cần viết hàm loadUserByUsername
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        ResLoginDTO res = new ResLoginDTO();
         User currentUserDB = this.userService.handleGetUserByUsername(loginDto.getUsername());
+        ResLoginDTO res = new ResLoginDTO();
         ResLoginDTO.UserLogin userLogin = new ResLoginDTO.UserLogin();
         if (currentUserDB != null) {
             userLogin.setId(currentUserDB.getId());

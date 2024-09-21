@@ -20,6 +20,10 @@ public class User {
     private String username;
     private String password;
 
+    private String verificationCode;
+    private Instant verificationDateExpired;
+    private boolean enabled;
+
     private String displayName;
     private GenderEnum gender;
     private String birthday;

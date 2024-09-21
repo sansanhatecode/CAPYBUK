@@ -58,4 +58,13 @@ public class GlobalException {
         res.setMessage("Exception occurs...");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(res);
     }
+
+    @ExceptionHandler(EmailNotVerifyException.class)
+    public ResponseEntity<RestResponse<Object>> emailNotVerify(EmailNotVerifyException ex) {
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.FORBIDDEN.value());
+        res.setError(ex.getMessage());
+        res.setMessage("Exception occurs...");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(res);
+    }
 }
