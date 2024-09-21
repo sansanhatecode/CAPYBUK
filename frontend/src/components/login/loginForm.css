@@ -181,3 +181,7 @@
 .container.active .toggle-right{
   transform: translateX(200%);
 }
+
+p.error{
+  @apply text-xs text-red-500 mt-0 mb-1 text-left w-full;
+}

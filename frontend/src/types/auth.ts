@@ -1,12 +1,14 @@
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
+}
+export interface RegisterRequest extends LoginRequest {
+  name: string;
 }
 
 export interface LoginResponseData {
-  id: number;
-  userName: string;
-  email: string;
+  // username: string;
+  // email: string;
   accessToken: string;
   refreshToken: string;
 }
