@@ -1,7 +1,9 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.request.ReqForgotPasswordDTO;
 import com.example.demo.dto.request.ReqLoginDTO;
 import com.example.demo.dto.request.ReqRegisterDTO;
+import com.example.demo.dto.request.ReqResetPasswordDTO;
 import com.example.demo.dto.response.ResLoginDTO;
 import com.example.demo.model.User;
 import com.example.demo.service.EmailValidatorService;
@@ -11,6 +13,7 @@ import com.example.demo.util.annotation.ApiMessage;
 import com.example.demo.util.error.EmailAreadyExistException;
 import com.example.demo.util.error.EmailNotVerifyException;
 import com.example.demo.util.error.IdInvalidException;
+import com.example.demo.util.error.UserNotFoundException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +52,7 @@ public class AuthController {
         this.emailValidatorService = emailValidatorService;
     }
 
+    // REGISTER
     @PostMapping("/auth/register")
     @ApiMessage("Register success")
     public ResponseEntity<Void> register(@Valid @RequestBody ReqRegisterDTO reqRegister) throws EmailAreadyExistException, MessagingException, IdInvalidException {
@@ -65,15 +69,17 @@ public class AuthController {
     }
 
     @GetMapping("/auth/verify")
-    public ResponseEntity<String> verifyAccount(@RequestParam("code") String code) {
+    @ApiMessage("Your account has been verified successfully.")
+    public ResponseEntity<Void> verifyAccount(@RequestParam("code") String code) throws IdInvalidException {
         boolean isVerified = userService.verifyUserByCode(code);
         if (isVerified) {
-            return ResponseEntity.ok("Your account has been verified successfully.");
+            return ResponseEntity.ok().body(null);
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid or expired verification code.");
+            throw new IdInvalidException("Code is invalid or expired");
         }
     }
 
+    // LOGIN
     @PostMapping("/auth/login")
     @ApiMessage("Login success")
     public ResponseEntity<ResLoginDTO> login(@Valid @RequestBody ReqLoginDTO loginDto) throws EmailNotVerifyException {
@@ -121,6 +127,7 @@ public class AuthController {
                 .body(res);
     }
 
+    // USER INFORMATION
     @GetMapping("/auth/account")
     @ApiMessage("Get user information")
     public ResponseEntity<ResLoginDTO.UserLogin> getAccount() {
@@ -139,6 +146,7 @@ public class AuthController {
         return ResponseEntity.ok().body(userLogin);
     }
 
+    // REFRESH TOKEN
     @GetMapping("/auth/refresh")
     @ApiMessage("Get User by refresh token")
     public ResponseEntity<ResLoginDTO> getRefreshToken(
@@ -192,6 +200,26 @@ public class AuthController {
                 .body(res);
     }
 
+    // RESET PASSWORD
+    @PostMapping("/auth/forgot-password")
+    @ApiMessage("Email reset password has been sent.")
+    public ResponseEntity<Void> forgotPassword(@RequestBody ReqForgotPasswordDTO req) throws UserNotFoundException, MessagingException {
+        User user = this.userService.handleGetUserByUsername(req.getUsername());
+        if (user == null) {
+            throw new UserNotFoundException("Email not exist!");
+        }
+        this.userService.sendCodeEmailForResetPassword(req.getUsername());
+        return ResponseEntity.ok().body(null);
+    }
+
+    @PostMapping("/auth/reset-password")
+    @ApiMessage("Password has been changed successfully")
+    public ResponseEntity<Void> resetNewPassword(@RequestBody ReqResetPasswordDTO req) throws UserNotFoundException, IdInvalidException {
+        this.userService.resetPassword(req.getUsername(), req.getCode(), req.getNewPassword());
+        return ResponseEntity.ok().body(null);
+    }
+
+    // LOGOUT
     @PostMapping("/auth/logout")
     @ApiMessage("Logout User")
     public ResponseEntity<Void> logout() throws IdInvalidException {

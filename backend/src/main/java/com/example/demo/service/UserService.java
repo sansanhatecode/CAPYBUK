@@ -5,11 +5,12 @@ import com.example.demo.dto.response.ResFetchUserDTO;
 import com.example.demo.dto.response.ResUpdateUserDTO;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.util.error.IdInvalidException;
+import com.example.demo.util.error.UserNotFoundException;
 import com.example.demo.util.helper.RandomStringGenerator;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -212,6 +213,83 @@ public class UserService {
             return true;
         }
         return false;  // Mã xác thực không hợp lệ hoặc đã hết hạn
+    }
+
+    public void sendCodeEmailForResetPassword(String username) throws MessagingException {
+        String subject = "Reset your password!";
+        String content = "<html>"
+                + "<body style='font-family: Arial, sans-serif; background-color: #f1eae0b9; padding: 20px;'>"
+                + "<div style='max-width: 600px; margin: auto; background-color: #fff; padding: 20px; border-radius: 10px;'>"
+                + "<h1 style='text-align: center; color: #AD7D59;'>Password Reset Request</h1>"
+                + "<p>Hi [[name]],</p>"
+                + "<p>It looks like you requested to reset your password. No worries, we've got you covered!</p>"
+                + "<p>Please copy the code below to reset your password:</p>"
+                + "<div style='text-align: center; margin: 20px 0;'>"
+                + "<p style='font-weight: bold; font-size: 20px;'>[[code]]</p>"
+                + "</div>"
+                + "<p>This code will expire in 5 minutes. If you didn't request a password reset, please ignore this email.</p>"
+                + "<p>Thank you,<br>The Capybuk Team</p>"
+                + "<div style='text-align: right;'>"
+                + "<img src='cid:image_logo' alt='Capybara with Camera' style='width: 100px; height: auto;'>"
+                + "</div>"
+                + "</div>"
+                + "</body>"
+                + "</html>";
+
+        String code = RandomStringGenerator.generateRandomString();
+
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom(fromAddress);
+        helper.setTo(username);
+        helper.setSubject(subject);
+
+        User user = this.handleGetUserByUsername(username);
+
+        // Initial value for reset password
+        user.setPasswordCode(code);
+        user.setPasswordExpired(Instant.now());
+        user.setPassEnabled(false);
+
+        this.userRepository.save(user);
+
+        // Customize the content with the user's display name and verification URL
+        content = content.replace("[[name]]", user.getDisplayName());
+        content = content.replace("[[code]]", user.getPasswordCode());
+
+        helper.setText(content, true);
+
+        try {
+            Resource res = new FileSystemResource(new File("E:\\image\\capybara.png"));
+            helper.addInline("image_logo", res);
+        } catch (Exception e) {
+            e.printStackTrace(); // In ra thông báo lỗi
+        }
+
+        mailSender.send(message);
+    }
+
+    public void resetPassword(String username, String code, String newPassword) throws UserNotFoundException, IdInvalidException {
+        User user = this.handleGetUserByUsername(username);
+
+        if (user == null) {
+            throw new UserNotFoundException("Email not found!");
+        }
+
+        if (!user.getPasswordCode().equals(code)) {
+            throw new IdInvalidException("Code is invalid!");
+        }
+
+        if (user.getPasswordExpired().isAfter(Instant.now())) {
+            throw new IdInvalidException("Code is expired!");
+        }
+
+        // update new password and hash it
+        String newHashPassword = this.passwordEncoder.encode(newPassword);
+        user.setPassword(newHashPassword);
+        user.setPassEnabled(true);
+        this.userRepository.save(user);
     }
 
 }
