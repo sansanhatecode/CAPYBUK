@@ -24,6 +24,10 @@ public class User {
     private Instant verificationDateExpired;
     private boolean enabled;
 
+    private String passwordCode;
+    private Instant passwordExpired;
+    private boolean passEnabled;
+
     private String displayName;
     private GenderEnum gender;
     private String birthday;
