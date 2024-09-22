@@ -3,7 +3,7 @@ export interface LoginRequest {
   password: string;
 }
 export interface RegisterRequest extends LoginRequest {
-  name: string;
+  displayName: string;
 }
 
 export interface LoginResponseData {

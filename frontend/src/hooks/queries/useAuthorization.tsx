@@ -1,6 +1,6 @@
 import API from "@/api/api";
 import { useRequest } from "@/api/Request";
-import { LoginRequest, LoginResponseData } from "@/types/auth";
+import { LoginRequest, LoginResponseData, RegisterRequest } from "@/types/auth";
 
 
 export function useAuthorization() {
@@ -11,9 +11,15 @@ export function useAuthorization() {
     return data;
   }
 
-  const signUp = async () => {
-    return null;
+  const signUp = async ({displayName, username, password} : RegisterRequest) => {
+    const data = await Request.post(API.REGISTER, { displayName, username, password });
+    return data;
   }
 
-  return {signIn, signUp}
+  const verify = async (code: string) => {
+    const data = await Request.get(API.VERIFY, { code: code })
+    return data
+  }
+
+  return {signIn, signUp, verify}
 }

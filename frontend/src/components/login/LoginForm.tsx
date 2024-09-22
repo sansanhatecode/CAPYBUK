@@ -6,6 +6,7 @@ import { useAuthorization } from "@/hooks/queries/useAuthorization";
 import { REGEX } from "@/constants/common";
 import { useRouter } from "next/navigation";
 import { AxiosError } from "axios";
+import { setAuthToken } from "@/helper/storage";
 
 const LoginForm = () => {
   const [isSignIn, setIsSignIn] = useState<boolean>(false);
@@ -17,22 +18,30 @@ const LoginForm = () => {
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
-  const { signIn } = useAuthorization();
+  const { signIn, signUp } = useAuthorization();
   const router = useRouter();
 
   const handleSignIn = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    setEmailError(!REGEX.EMAIL.test(email))
-    if (!loginError && !emailError) {
-      try {
-        const data = await signIn({ username: email, password: password });
-        setLoginError("");
-        router.push("/");
-      } catch (error) {
-        if (error instanceof AxiosError) {
-          setLoginError(error.message);
-        } else {
-          setLoginError("Invalid email or password");
+    e.preventDefault();
+    setEmailError(!REGEX.EMAIL.test(email));
+    if (!emailError) {
+      if (!password.length) {
+        setLoginError("Password cannot be empty");
+      } else {
+        try {
+          const { accessToken } = await signIn({
+            username: email,
+            password: password,
+          });
+          setAuthToken(accessToken);
+          setLoginError("");
+          router.push("/");
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            setLoginError(error.message);
+          } else {
+            setLoginError("Invalid email or password");
+          }
         }
       }
     }
@@ -40,7 +49,29 @@ const LoginForm = () => {
 
   const handleSignUp = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    await console.log(name, email, password);
+    setEmailError(!REGEX.EMAIL.test(email));
+    if (!emailError) {
+      if (!password.length) {
+        setLoginError("Password cannot be empty");
+      } else {
+        try {
+          await signUp({
+            displayName: name,
+            username: email,
+            password: password,
+          });
+          router.push("/verify-email")
+        } catch (error) {
+          if (error instanceof AxiosError) {
+            setLoginError(error.message);
+          } else {
+            setLoginError(
+              "Oops! Something went wrong, please try again later!"
+            );
+          }
+        }
+      }
+    }
   };
 
   return (
@@ -92,7 +123,7 @@ const LoginForm = () => {
               placeholder="Email"
             />
             {emailError ? (
-              <p className="error">* Invalid email format</p>
+              <p className="error">{email.length ? "* Invalid email format" : "* Email cannot be empty" }</p>
             ) : (
               <></>
             )}
@@ -102,6 +133,7 @@ const LoginForm = () => {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  setLoginError("")
                 }}
                 placeholder="Password"
               />
@@ -122,7 +154,7 @@ const LoginForm = () => {
                 ></i>
               )}
             </div>
-
+            {loginError ? <p className="error">* {loginError}</p> : <></>}
             <button onClick={(e) => handleSignUp(e)}>Sign Up</button>
           </form>
         </div>
@@ -154,7 +186,7 @@ const LoginForm = () => {
               }}
             />
             {emailError ? (
-              <p className="error">* Invalid email format</p>
+              <p className="error">{email.length ? "* Invalid email format" : "* Email cannot be empty" }</p>
             ) : (
               <></>
             )}
@@ -164,6 +196,7 @@ const LoginForm = () => {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
+                  setLoginError("")
                 }}
                 placeholder="Password"
               />
@@ -209,6 +242,7 @@ const LoginForm = () => {
                   setEmail("");
                   setPassword("");
                   setEmailError(false);
+                  setLoginError("")
                 }}
               >
                 Sign In
@@ -227,6 +261,7 @@ const LoginForm = () => {
                   setEmail("");
                   setPassword("");
                   setEmailError(false);
+                  setLoginError("");
                 }}
               >
                 Sign Up
