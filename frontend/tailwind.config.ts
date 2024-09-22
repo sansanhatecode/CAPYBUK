@@ -10,17 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         brown: {
-          xlight: '#FFE7DA',
-          light: '#C5A27C',
-          medium: '#AD7D59',
-          dark: '#71604E',
-          opacity: '#f1eae0b9',
+          xlight: "#FFE7DA",
+          light: "#C5A27C",
+          medium: "#AD7D59",
+          dark: "#71604E",
+          opacity: "#f1eae0b9",
         },
         pastelblue: {
-          medium: '#A7C7E7'
-        }
-      }
-
+          medium: "#A7C7E7",
+        },
+        shinny: "#ffffffc9",
+      },
     },
   },
   plugins: [],
