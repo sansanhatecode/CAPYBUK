@@ -1,9 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.request.ReqForgotPasswordDTO;
-import com.example.demo.dto.request.ReqLoginDTO;
-import com.example.demo.dto.request.ReqRegisterDTO;
-import com.example.demo.dto.request.ReqResetPasswordDTO;
+import com.example.demo.dto.request.*;
 import com.example.demo.dto.response.ResLoginDTO;
 import com.example.demo.model.User;
 import com.example.demo.service.EmailValidatorService;
@@ -14,6 +11,7 @@ import com.example.demo.util.error.EmailAreadyExistException;
 import com.example.demo.util.error.EmailNotVerifyException;
 import com.example.demo.util.error.IdInvalidException;
 import com.example.demo.util.error.UserNotFoundException;
+import io.micrometer.core.instrument.Meter;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,6 +66,7 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.CREATED).body(null);
     }
 
+    // VERIFY EMAIL
     @GetMapping("/auth/verify")
     @ApiMessage("Your account has been verified successfully.")
     public ResponseEntity<Void> verifyAccount(@RequestParam("code") String code) throws IdInvalidException {
@@ -77,6 +76,17 @@ public class AuthController {
         } else {
             throw new IdInvalidException("Code is invalid or expired");
         }
+    }
+
+    @PostMapping("/auth/resend-verification")
+    @ApiMessage("Email verify has been sent successfully.")
+    public ResponseEntity<Void> resendVerification(@RequestBody ReqResendEmailDTO req) throws IdInvalidException, MessagingException {
+        User user = this.userService.handleGetUserByUsername(req.getUsername());
+        if (user == null) {
+            throw new IdInvalidException("Email not exist!");
+        }
+        this.userService.resendEmailVerification(user);
+        return ResponseEntity.ok().body(null);
     }
 
     // LOGIN

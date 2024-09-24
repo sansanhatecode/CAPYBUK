@@ -196,6 +196,15 @@ public class UserService {
 
     }
 
+    public void resendEmailVerification(User user) throws MessagingException {
+        String code = RandomStringGenerator.generateRandomString();
+        user.setVerificationCode(code);
+        user.setVerificationDateExpired(Instant.now().plus(Duration.ofMinutes(5)));
+        this.userRepository.save(user);
+
+        this.sendVerificationEmail(user);
+    }
+
     public boolean isVerificationCodeValid(User user, String code) {
         return user.getVerificationCode().equals(code) && user.getVerificationDateExpired().isAfter(Instant.now());
     }
